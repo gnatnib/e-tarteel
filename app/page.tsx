@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 
 interface Surah {
   number: number;
@@ -139,6 +140,30 @@ export default function Home() {
       };
     }
   };
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // Open dropdown when searching
+    if (query.length > 0) {
+      setIsOpen(true);
+    }
+
+    // If exact match is found, select it automatically
+    const matchedSurah = surahs.find(
+      (surah) =>
+        surah.englishName.toLowerCase() === query.toLowerCase() ||
+        surah.name === query ||
+        surah.englishNameTranslation.toLowerCase() === query.toLowerCase()
+    );
+
+    if (matchedSurah) {
+      setSelectedSurah(matchedSurah.number.toString());
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background islamic-pattern">
@@ -198,21 +223,67 @@ export default function Home() {
 
         <Card className="mb-6 sm:mb-8 animate-scale-in bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
-            <Select value={selectedSurah} onValueChange={setSelectedSurah}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a Surah" />
-              </SelectTrigger>
-              <SelectContent>
-                {surahs.map((surah) => (
-                  <SelectItem
-                    key={surah.number}
-                    value={surah.number.toString()}
-                  >
-                    {surah.number}. {surah.englishName} ({surah.name})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Search surah..."
+                value={searchQuery}
+                onChange={handleSearch}
+                className="mb-2"
+              />
+              <Select
+                value={selectedSurah}
+                onValueChange={(value) => {
+                  setSelectedSurah(value);
+                  setSearchQuery(""); // Clear search when selecting
+                }}
+                open={isOpen}
+                onOpenChange={setIsOpen}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {surahs.find((s) => s.number.toString() === selectedSurah)
+                      ? `${
+                          surahs.find(
+                            (s) => s.number.toString() === selectedSurah
+                          )?.number
+                        }. ${
+                          surahs.find(
+                            (s) => s.number.toString() === selectedSurah
+                          )?.englishName
+                        } (${
+                          surahs.find(
+                            (s) => s.number.toString() === selectedSurah
+                          )?.name
+                        })`
+                      : "Select a Surah"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {surahs
+                    .filter(
+                      (surah) =>
+                        surah.englishName
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) ||
+                        surah.name.includes(searchQuery) ||
+                        surah.englishNameTranslation
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) ||
+                        surah.number.toString().includes(searchQuery)
+                    )
+                    .map((surah) => (
+                      <SelectItem
+                        key={surah.number}
+                        value={surah.number.toString()}
+                        className="cursor-pointer"
+                      >
+                        {surah.number}. {surah.englishName} ({surah.name})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 
