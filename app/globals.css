@@ -73,6 +73,55 @@
     @apply bg-background text-foreground;
   }
 }
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+::selection {
+  @apply bg-secondary/30;
+}
+
+/* Theme transition utilities */
+.theme-transition {
+  @apply transition-colors duration-100;
+}
+
+/* Cards and containers */
+.bg-card,
+.bg-popover,
+.bg-background {
+  @apply transition-colors duration-300;
+}
+
+/* Content transitions */
+.text-foreground,
+.text-muted-foreground,
+.text-primary,
+.text-secondary {
+  @apply transition-colors duration-300;
+}
+
+/* Border transitions */
+.border,
+.border-border {
+  @apply transition-colors duration-300;
+}
+
+/* Background pattern transition */
+.islamic-pattern {
+  @apply transition-[background-image] duration-300;
+}
+
+/* Ring and focus transitions */
+.ring,
+.focus-visible:ring {
+  @apply transition-shadow duration-300;
+}
+
+/* Backdrop blur transitions */
+.backdrop-blur-sm {
+  @apply transition-[backdrop-filter] duration-300;
+}
 
 .font-arabic {
   font-family: "Amiri", serif;

@@ -160,8 +160,8 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-background islamic-pattern">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen">
+    <div className="min-h-screen bg-background islamic-pattern theme-transition">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen theme-transition">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-secondary/10 rounded-full">
@@ -199,7 +199,7 @@ export default function Home() {
           </div>
         </div>
 
-        <Card className="mb-6 sm:mb-8 animate-scale-in bg-card/50 backdrop-blur-sm">
+        <Card className="mb-6 sm:mb-8 animate-scale-in bg-card/50 backdrop-blur-sm theme-transition">
           <CardContent className="p-4">
             <div className="flex gap-2">
               <Select value={selectedSurah} onValueChange={setSelectedSurah}>
@@ -248,36 +248,42 @@ export default function Home() {
         </Card>
 
         <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-          <DialogContent className="max-w-2xl w-[90vw]">
-            <DialogHeader>
+          <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] p-4 sm:p-6 h-[80vh] max-h-[80vh]">
+            <DialogHeader className="mb-4">
               <DialogTitle>Search Surah</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Search by name or number..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-                autoFocus
-              />
-              <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
+            <div className="flex flex-col gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or number..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4"
+                  autoFocus
+                />
+              </div>
+              <ScrollArea className="h-[calc(80vh-8rem)]">
                 <div className="space-y-2">
                   {filteredSurahs.map((surah) => (
                     <Button
                       key={surah.number}
                       variant="ghost"
-                      className="w-full justify-start text-left"
+                      className="w-full justify-start text-left h-auto py-3"
                       onClick={() => {
                         setSelectedSurah(surah.number.toString());
                         setSearchOpen(false);
                         setSearchQuery("");
                       }}
                     >
-                      {surah.number}. {surah.englishName} ({surah.name})
-                      <br />
-                      <span className="text-xs text-muted-foreground">
-                        {surah.englishNameTranslation}
-                      </span>
+                      <div>
+                        <div className="font-medium">
+                          {surah.number}. {surah.englishName} ({surah.name})
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {surah.englishNameTranslation}
+                        </div>
+                      </div>
                     </Button>
                   ))}
                 </div>
@@ -301,14 +307,11 @@ export default function Home() {
                   <Card
                     key={verse.number}
                     ref={(el) => (verseRefs.current[index] = el)}
-                    className={`animate-fade-in border-secondary/20 hover:border-secondary/40 transition-colors ${
+                    className={`animate-fade-in border-secondary/20 hover:border-secondary/40 theme-transition ${
                       playingVerse === verse.number
                         ? "ring-2 ring-secondary"
                         : ""
                     }`}
-                    style={{
-                      animationDelay: `${index * 100}ms`,
-                    }}
                   >
                     <CardContent className="p-4 sm:p-6">
                       <div className="flex justify-between items-center mb-4 sm:mb-6">
