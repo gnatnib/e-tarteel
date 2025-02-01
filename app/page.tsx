@@ -18,6 +18,7 @@ import {
   Play,
   Pause,
   Volume2,
+  Languages,
   Search,
   Heart,
   X,
@@ -174,6 +175,32 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center space-x-2">
+              <Select
+                value={language}
+                onValueChange={(value: Language) => setLanguage(value)}
+              >
+                <SelectTrigger className="w-[140px] h-9 text-xs">
+                  <Languages className="mr-2 h-4 w-4 text-xs" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en" className="text-xs flex items-center">
+                    <img
+                      src="https://flagcdn.com/w40/us.png"
+                      className="w-2 h-2 mr-2"
+                    />
+                    English
+                  </SelectItem>
+                  <SelectItem value="id" className="text-xs flex items-center">
+                    <img
+                      src="https://flagcdn.com/w40/id.png"
+                      className="w-2 h-2 mr-2"
+                    />
+                    Indonesian
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
               <Switch
                 id="auto-scroll"
                 checked={autoScroll}
