@@ -19,6 +19,7 @@ import {
   Pause,
   Volume2,
   Languages,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
@@ -270,6 +271,12 @@ export default function Home() {
             </div>
           </ScrollArea>
         )}
+        <footer className="mt-6 text-center pb-4">
+          <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            Dibuat oleh Bintang Syafrian atas Izin Allah SWT.
+            <Heart className="h-4 w-4 text-red-500 fill-red-500 animate-heartbeat" />
+          </p>
+        </footer>
       </div>
     </div>
   );
