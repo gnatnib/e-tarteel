@@ -18,14 +18,21 @@ import {
   Play,
   Pause,
   Volume2,
-  Languages,
+  Search,
   Heart,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Surah {
   number: number;
@@ -64,6 +71,8 @@ export default function Home() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const verseRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetch("https://api.alquran.cloud/v1/surah")
@@ -140,36 +149,20 @@ export default function Home() {
       };
     }
   };
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-
-    // Open dropdown when searching
-    if (query.length > 0) {
-      setIsOpen(true);
-    }
-
-    // If exact match is found, select it automatically
-    const matchedSurah = surahs.find(
-      (surah) =>
-        surah.englishName.toLowerCase() === query.toLowerCase() ||
-        surah.name === query ||
-        surah.englishNameTranslation.toLowerCase() === query.toLowerCase()
-    );
-
-    if (matchedSurah) {
-      setSelectedSurah(matchedSurah.number.toString());
-    }
-  };
+  const filteredSurahs = surahs.filter((surah) =>
+    [
+      surah.englishName.toLowerCase(),
+      surah.name,
+      surah.englishNameTranslation.toLowerCase(),
+      surah.number.toString(),
+    ].some((field) => field.includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-background islamic-pattern">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 flex flex-col min-h-screen">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          {/* Logo and Title */}
           <div className="flex items-center gap-3">
             <div className="p-2 bg-secondary/10 rounded-full">
               <Book className="h-6 w-6 sm:h-8 sm:w-8 text-secondary" />
@@ -179,22 +172,7 @@ export default function Home() {
             </h1>
           </div>
 
-          {/* Controls */}
           <div className="flex flex-wrap items-center gap-2">
-            <Select
-              value={language}
-              onValueChange={(value: Language) => setLanguage(value)}
-            >
-              <SelectTrigger className="w-[120px] h-9">
-                <Languages className="mr-2 h-4 w-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="id">Indonesia</SelectItem>
-              </SelectContent>
-            </Select>
-
             <div className="flex items-center space-x-2">
               <Switch
                 id="auto-scroll"
@@ -223,23 +201,8 @@ export default function Home() {
 
         <Card className="mb-6 sm:mb-8 animate-scale-in bg-card/50 backdrop-blur-sm">
           <CardContent className="p-4">
-            <div className="space-y-2">
-              <Input
-                type="text"
-                placeholder="Search surah..."
-                value={searchQuery}
-                onChange={handleSearch}
-                className="mb-2"
-              />
-              <Select
-                value={selectedSurah}
-                onValueChange={(value) => {
-                  setSelectedSurah(value);
-                  setSearchQuery(""); // Clear search when selecting
-                }}
-                open={isOpen}
-                onOpenChange={setIsOpen}
-              >
+            <div className="flex gap-2">
+              <Select value={selectedSurah} onValueChange={setSelectedSurah}>
                 <SelectTrigger className="w-full">
                   <SelectValue>
                     {surahs.find((s) => s.number.toString() === selectedSurah)
@@ -260,92 +223,133 @@ export default function Home() {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {surahs
-                    .filter(
-                      (surah) =>
-                        surah.englishName
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()) ||
-                        surah.name.includes(searchQuery) ||
-                        surah.englishNameTranslation
-                          .toLowerCase()
-                          .includes(searchQuery.toLowerCase()) ||
-                        surah.number.toString().includes(searchQuery)
-                    )
-                    .map((surah) => (
+                  <ScrollArea className="h-[300px]">
+                    {surahs.map((surah) => (
                       <SelectItem
                         key={surah.number}
                         value={surah.number.toString()}
-                        className="cursor-pointer"
                       >
                         {surah.number}. {surah.englishName} ({surah.name})
                       </SelectItem>
                     ))}
+                  </ScrollArea>
                 </SelectContent>
               </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSearchOpen(true)}
+                className="shrink-0"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-          </div>
-        ) : (
-          <ScrollArea className="h-[calc(100vh-200px)] sm:h-[calc(100vh-250px)] rounded-2xl border bg-card/50 backdrop-blur-sm">
-            <div
-              className="p-4 sm:p-6 space-y-4 sm:space-y-6"
-              ref={scrollAreaRef}
-            >
-              {verses.map((verse, index) => (
-                <Card
-                  key={verse.number}
-                  ref={(el) => (verseRefs.current[index] = el)}
-                  className={`animate-fade-in border-secondary/20 hover:border-secondary/40 transition-colors ${
-                    playingVerse === verse.number ? "ring-2 ring-secondary" : ""
-                  }`}
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                  }}
-                >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex justify-between items-center mb-4 sm:mb-6">
-                      <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-secondary/10 text-secondary">
-                        Verse {verse.number}
+        <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+          <DialogContent className="max-w-2xl w-[90vw]">
+            <DialogHeader>
+              <DialogTitle>Search Surah</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                placeholder="Search by name or number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+                autoFocus
+              />
+              <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
+                <div className="space-y-2">
+                  {filteredSurahs.map((surah) => (
+                    <Button
+                      key={surah.number}
+                      variant="ghost"
+                      className="w-full justify-start text-left"
+                      onClick={() => {
+                        setSelectedSurah(surah.number.toString());
+                        setSearchOpen(false);
+                        setSearchQuery("");
+                      }}
+                    >
+                      {surah.number}. {surah.englishName} ({surah.name})
+                      <br />
+                      <span className="text-xs text-muted-foreground">
+                        {surah.englishNameTranslation}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="rounded-full hover:bg-secondary/10 transition-colors"
-                        onClick={() =>
-                          handleAudioPlay(verse.number, verse.audio)
-                        }
-                      >
-                        {playingVerse === verse.number ? (
-                          <Pause className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
-                        ) : (
-                          <Volume2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
-                        )}
-                      </Button>
-                    </div>
-                    <div className="verse-decoration">
-                      <p className="text-2xl sm:text-3xl mb-4 sm:mb-6 text-right font-arabic leading-loose">
-                        {verse.text}
-                      </p>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                      {verse.translations[language]}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-          </ScrollArea>
-        )}
-        <footer className="mt-6 text-center pb-4">
-          <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex-1 flex flex-col">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+            </div>
+          ) : (
+            <ScrollArea className="flex-1 rounded-2xl border bg-card/50 backdrop-blur-sm">
+              <div
+                className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+                ref={scrollAreaRef}
+              >
+                {verses.map((verse, index) => (
+                  <Card
+                    key={verse.number}
+                    ref={(el) => (verseRefs.current[index] = el)}
+                    className={`animate-fade-in border-secondary/20 hover:border-secondary/40 transition-colors ${
+                      playingVerse === verse.number
+                        ? "ring-2 ring-secondary"
+                        : ""
+                    }`}
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                    }}
+                  >
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex justify-between items-center mb-4 sm:mb-6">
+                        <span className="text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 rounded-full bg-secondary/10 text-secondary">
+                          Verse {verse.number}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full hover:bg-secondary/10 transition-colors"
+                          onClick={() =>
+                            handleAudioPlay(verse.number, verse.audio)
+                          }
+                        >
+                          {playingVerse === verse.number ? (
+                            <Pause className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
+                          ) : (
+                            <Volume2 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
+                          )}
+                        </Button>
+                      </div>
+                      <div className="verse-decoration">
+                        <p className="text-2xl sm:text-3xl mb-4 sm:mb-6 text-right font-arabic leading-loose">
+                          {verse.text}
+                        </p>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {verse.translations[language]}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+
+        <footer className="mt-4 text-center py-2 border-t bg-background/50 backdrop-blur-sm">
+          <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             Dibuat oleh Bintang Syafrian atas Izin Allah SWT.
-            <Heart className="h-4 w-4 text-red-500 fill-red-500 animate-heartbeat" />
+            <Heart className="h-3 w-3 text-red-500 fill-red-500 animate-heartbeat" />
           </p>
         </footer>
       </div>
